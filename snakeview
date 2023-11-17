@@ -1,0 +1,93 @@
+// SnakeView.kt
+package com.example.snakegame
+
+import android.content.Context
+import android.graphics.Color
+import android.graphics.Point
+import android.util.AttributeSet
+import android.view.MotionEvent
+import android.view.SurfaceHolder
+import android.view.SurfaceView
+import kotlin.math.abs
+
+class SnakeView(context: Context, attrs: AttributeSet? = null) : SurfaceView(context, attrs),
+    SurfaceHolder.Callback {
+
+    private val snake: Snake = Snake()
+    private val food: Food = Food()
+    private val gridSize = 20
+    private var direction: Direction = Direction.RIGHT
+
+    init {
+        holder.addCallback(this)
+    }
+
+    fun resetGame() {
+        snake.reset()
+        spawnFood()
+    }
+
+    private fun spawnFood() {
+        val random = java.util.Random()
+        var foodX: Int
+        var foodY: Int
+
+        do {
+            foodX = random.nextInt(gridSize)
+            foodY = random.nextInt(gridSize)
+        } while (snake.checkCollision(foodX, foodY))
+
+        food.setFoodPosition(foodX, foodY)
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        when (event.action) {
+            MotionEvent.ACTION_UP -> {
+                val xDiff = abs(event.x - snake.head.x)
+                val yDiff = abs(event.y - snake.head.y)
+
+                if (xDiff > yDiff) {
+                    if (event.x > snake.head.x) direction = Direction.RIGHT
+                    else direction = Direction.LEFT
+                } else {
+                    if (event.y > snake.head.y) direction = Direction.DOWN
+                    else direction = Direction.UP
+                }
+            }
+        }
+        return true
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        snake.initialize()
+        spawnFood()
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {}
+
+    fun update() {
+        if (snake.move(direction)) {
+            if (snake.checkCollision(food.x, food.y)) {
+                snake.grow()
+                spawnFood()
+            }
+        } else {
+            // Game over logic
+            // Handle game over actions
+        }
+
+        draw()
+    }
+
+    private fun draw() {
+        val canvas = holder.lockCanvas()
+        if (canvas != null) {
+            canvas.drawColor(Color.BLACK)
+            snake.draw(canvas)
+            food.draw(canvas)
+            holder.unlockCanvasAndPost(canvas)
+        }
+    }
+}
