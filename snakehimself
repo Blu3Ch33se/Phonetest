@@ -1,0 +1,75 @@
+// Snake.kt
+package com.example.snakegame
+
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+
+class Snake {
+
+    private val body: MutableList<Point> = mutableListOf()
+    private var snakeSize = 3
+    private val paint = Paint()
+
+    init {
+        paint.color = Color.GREEN
+    }
+
+    val head: Point
+        get() = body.first()
+
+    fun initialize() {
+        body.clear()
+        for (i in snakeSize downTo 1) {
+            body.add(Point(i, 0))
+        }
+    }
+
+    fun move(direction: Direction): Boolean {
+        val newHead = Point(head)
+
+        when (direction) {
+            Direction.UP -> newHead.y--
+            Direction.DOWN -> newHead.y++
+            Direction.LEFT -> newHead.x--
+            Direction.RIGHT -> newHead.x++
+        }
+
+        if (checkCollision(newHead.x, newHead.y)) {
+            return false
+        }
+
+        body.add(0, newHead)
+
+        if (body.size > snakeSize) {
+            body.removeAt(snakeSize)
+        }
+
+        return true
+    }
+
+    fun checkCollision(x: Int, y: Int): Boolean {
+        return body.contains(Point(x, y))
+    }
+
+    fun grow() {
+        snakeSize++
+    }
+
+    fun reset() {
+        snakeSize = 3
+        initialize()
+    }
+
+    fun draw(canvas: Canvas) {
+        for (point in body) {
+            canvas.drawRect(
+                (point.x * SnakeView.gridSize).toFloat(),
+                (point.y * SnakeView.gridSize).toFloat(),
+                ((point.x + 1) * SnakeView.gridSize).toFloat(),
+                ((point.y + 1) * SnakeView.gridSize).toFloat(),
+                paint
+            )
+        }
+    }
+}
